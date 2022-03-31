@@ -88,7 +88,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = sapphiredb$(EXEEXT)
+bin_PROGRAMS = sapphiredb$(EXEEXT) sdb$(EXEEXT)
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -105,13 +105,23 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_sapphiredb_OBJECTS = sapphiredb-pmdMain.$(OBJEXT) \
+	sapphiredb-pmdTcpListener.$(OBJEXT) \
 	sapphiredb-bsonobj.$(OBJEXT) sapphiredb-json.$(OBJEXT) \
 	sapphiredb-oid.$(OBJEXT) sapphiredb-base64.$(OBJEXT) \
-	sapphiredb-md5.$(OBJEXT) sapphiredb-nonce.$(OBJEXT)
+	sapphiredb-md5.$(OBJEXT) sapphiredb-nonce.$(OBJEXT) \
+	sapphiredb-ossSocket.$(OBJEXT)
 sapphiredb_OBJECTS = $(am_sapphiredb_OBJECTS)
 sapphiredb_DEPENDENCIES =
 sapphiredb_LINK = $(CXXLD) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) \
 	$(sapphiredb_LDFLAGS) $(LDFLAGS) -o $@
+am_sdb_OBJECTS = sdb-edb.$(OBJEXT) sdb-command.$(OBJEXT) \
+	sdb-commandFactory.$(OBJEXT) sdb-bsonobj.$(OBJEXT) \
+	sdb-json.$(OBJEXT) sdb-oid.$(OBJEXT) sdb-base64.$(OBJEXT) \
+	sdb-md5.$(OBJEXT) sdb-nonce.$(OBJEXT) sdb-ossSocket.$(OBJEXT)
+sdb_OBJECTS = $(am_sdb_OBJECTS)
+sdb_DEPENDENCIES =
+sdb_LINK = $(CXXLD) $(sdb_CXXFLAGS) $(CXXFLAGS) $(sdb_LDFLAGS) \
+	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -131,7 +141,14 @@ am__depfiles_remade = ./$(DEPDIR)/sapphiredb-base64.Po \
 	./$(DEPDIR)/sapphiredb-bsonobj.Po \
 	./$(DEPDIR)/sapphiredb-json.Po ./$(DEPDIR)/sapphiredb-md5.Po \
 	./$(DEPDIR)/sapphiredb-nonce.Po ./$(DEPDIR)/sapphiredb-oid.Po \
-	./$(DEPDIR)/sapphiredb-pmdMain.Po
+	./$(DEPDIR)/sapphiredb-ossSocket.Po \
+	./$(DEPDIR)/sapphiredb-pmdMain.Po \
+	./$(DEPDIR)/sapphiredb-pmdTcpListener.Po \
+	./$(DEPDIR)/sdb-base64.Po ./$(DEPDIR)/sdb-bsonobj.Po \
+	./$(DEPDIR)/sdb-command.Po ./$(DEPDIR)/sdb-commandFactory.Po \
+	./$(DEPDIR)/sdb-edb.Po ./$(DEPDIR)/sdb-json.Po \
+	./$(DEPDIR)/sdb-md5.Po ./$(DEPDIR)/sdb-nonce.Po \
+	./$(DEPDIR)/sdb-oid.Po ./$(DEPDIR)/sdb-ossSocket.Po
 am__mv = mv -f
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -150,8 +167,8 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(sapphiredb_SOURCES)
-DIST_SOURCES = $(sapphiredb_SOURCES)
+SOURCES = $(sapphiredb_SOURCES) $(sdb_SOURCES)
+DIST_SOURCES = $(sapphiredb_SOURCES) $(sdb_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -300,13 +317,23 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
 sapphiredb_SOURCES = \
-	pmd/pmdMain.cpp \
+	pmd/pmdMain.cpp pmd/pmdTcpListener.cpp \
 	bson/src/bsonobj.cpp bson/src/util/json.cpp bson/src/oid.cpp \
-	bson/src/lib/base64.cpp bson/src/lib/md5.cpp bson/src/lib/nonce.cpp
+	bson/src/lib/base64.cpp bson/src/lib/md5.cpp bson/src/lib/nonce.cpp \
+	oss/ossSocket.cpp 
+
+sdb_SOURCES = \
+	client/edb.cpp client/command.cpp client/commandFactory.cpp \
+	bson/src/bsonobj.cpp bson/src/util/json.cpp bson/src/oid.cpp \
+	bson/src/lib/base64.cpp bson/src/lib/md5.cpp bson/src/lib/nonce.cpp \
+	oss/ossSocket.cpp 
 
 sapphiredb_CXXFLAGS = -I../boost -Ibson/src -Iinclude -D_FILE_OFFSET_BITS=64 -ggdb -Wall -O0
 sapphiredb_LDADD = -lpthread -lm -lboost_system -lboost_thread -lboost_program_options -lrt
 sapphiredb_LDFLAGS = -fPIC -rdynamic -L../boost/stage/lib -pthread
+sdb_CXXFLAGS = -I../boost -Ibson/src -Iinclude -D_FILE_OFFSET_BITS=64 -ggdb -Wall -O0
+sdb_LDADD = -lpthread -lm -lboost_system -lboost_thread -lrt
+sdb_LDFLAGS = -fPIC -rdynamic -L../boost/stage/lib 
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -407,6 +434,10 @@ sapphiredb$(EXEEXT): $(sapphiredb_OBJECTS) $(sapphiredb_DEPENDENCIES) $(EXTRA_sa
 	@rm -f sapphiredb$(EXEEXT)
 	$(AM_V_CXXLD)$(sapphiredb_LINK) $(sapphiredb_OBJECTS) $(sapphiredb_LDADD) $(LIBS)
 
+sdb$(EXEEXT): $(sdb_OBJECTS) $(sdb_DEPENDENCIES) $(EXTRA_sdb_DEPENDENCIES) 
+	@rm -f sdb$(EXEEXT)
+	$(AM_V_CXXLD)$(sdb_LINK) $(sdb_OBJECTS) $(sdb_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -419,7 +450,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sapphiredb-md5.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sapphiredb-nonce.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sapphiredb-oid.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sapphiredb-ossSocket.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sapphiredb-pmdMain.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sapphiredb-pmdTcpListener.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-base64.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-bsonobj.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-command.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-commandFactory.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-edb.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-json.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-md5.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-nonce.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-oid.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sdb-ossSocket.Po@am__quote@ # am--include-marker
 
 $(am__depfiles_remade):
 	@$(MKDIR_P) $(@D)
@@ -454,6 +497,20 @@ sapphiredb-pmdMain.obj: pmd/pmdMain.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pmd/pmdMain.cpp' object='sapphiredb-pmdMain.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -c -o sapphiredb-pmdMain.obj `if test -f 'pmd/pmdMain.cpp'; then $(CYGPATH_W) 'pmd/pmdMain.cpp'; else $(CYGPATH_W) '$(srcdir)/pmd/pmdMain.cpp'; fi`
+
+sapphiredb-pmdTcpListener.o: pmd/pmdTcpListener.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -MT sapphiredb-pmdTcpListener.o -MD -MP -MF $(DEPDIR)/sapphiredb-pmdTcpListener.Tpo -c -o sapphiredb-pmdTcpListener.o `test -f 'pmd/pmdTcpListener.cpp' || echo '$(srcdir)/'`pmd/pmdTcpListener.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sapphiredb-pmdTcpListener.Tpo $(DEPDIR)/sapphiredb-pmdTcpListener.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pmd/pmdTcpListener.cpp' object='sapphiredb-pmdTcpListener.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -c -o sapphiredb-pmdTcpListener.o `test -f 'pmd/pmdTcpListener.cpp' || echo '$(srcdir)/'`pmd/pmdTcpListener.cpp
+
+sapphiredb-pmdTcpListener.obj: pmd/pmdTcpListener.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -MT sapphiredb-pmdTcpListener.obj -MD -MP -MF $(DEPDIR)/sapphiredb-pmdTcpListener.Tpo -c -o sapphiredb-pmdTcpListener.obj `if test -f 'pmd/pmdTcpListener.cpp'; then $(CYGPATH_W) 'pmd/pmdTcpListener.cpp'; else $(CYGPATH_W) '$(srcdir)/pmd/pmdTcpListener.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sapphiredb-pmdTcpListener.Tpo $(DEPDIR)/sapphiredb-pmdTcpListener.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='pmd/pmdTcpListener.cpp' object='sapphiredb-pmdTcpListener.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -c -o sapphiredb-pmdTcpListener.obj `if test -f 'pmd/pmdTcpListener.cpp'; then $(CYGPATH_W) 'pmd/pmdTcpListener.cpp'; else $(CYGPATH_W) '$(srcdir)/pmd/pmdTcpListener.cpp'; fi`
 
 sapphiredb-bsonobj.o: bson/src/bsonobj.cpp
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -MT sapphiredb-bsonobj.o -MD -MP -MF $(DEPDIR)/sapphiredb-bsonobj.Tpo -c -o sapphiredb-bsonobj.o `test -f 'bson/src/bsonobj.cpp' || echo '$(srcdir)/'`bson/src/bsonobj.cpp
@@ -538,6 +595,160 @@ sapphiredb-nonce.obj: bson/src/lib/nonce.cpp
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/lib/nonce.cpp' object='sapphiredb-nonce.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -c -o sapphiredb-nonce.obj `if test -f 'bson/src/lib/nonce.cpp'; then $(CYGPATH_W) 'bson/src/lib/nonce.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/lib/nonce.cpp'; fi`
+
+sapphiredb-ossSocket.o: oss/ossSocket.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -MT sapphiredb-ossSocket.o -MD -MP -MF $(DEPDIR)/sapphiredb-ossSocket.Tpo -c -o sapphiredb-ossSocket.o `test -f 'oss/ossSocket.cpp' || echo '$(srcdir)/'`oss/ossSocket.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sapphiredb-ossSocket.Tpo $(DEPDIR)/sapphiredb-ossSocket.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='oss/ossSocket.cpp' object='sapphiredb-ossSocket.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -c -o sapphiredb-ossSocket.o `test -f 'oss/ossSocket.cpp' || echo '$(srcdir)/'`oss/ossSocket.cpp
+
+sapphiredb-ossSocket.obj: oss/ossSocket.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -MT sapphiredb-ossSocket.obj -MD -MP -MF $(DEPDIR)/sapphiredb-ossSocket.Tpo -c -o sapphiredb-ossSocket.obj `if test -f 'oss/ossSocket.cpp'; then $(CYGPATH_W) 'oss/ossSocket.cpp'; else $(CYGPATH_W) '$(srcdir)/oss/ossSocket.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sapphiredb-ossSocket.Tpo $(DEPDIR)/sapphiredb-ossSocket.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='oss/ossSocket.cpp' object='sapphiredb-ossSocket.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sapphiredb_CXXFLAGS) $(CXXFLAGS) -c -o sapphiredb-ossSocket.obj `if test -f 'oss/ossSocket.cpp'; then $(CYGPATH_W) 'oss/ossSocket.cpp'; else $(CYGPATH_W) '$(srcdir)/oss/ossSocket.cpp'; fi`
+
+sdb-edb.o: client/edb.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-edb.o -MD -MP -MF $(DEPDIR)/sdb-edb.Tpo -c -o sdb-edb.o `test -f 'client/edb.cpp' || echo '$(srcdir)/'`client/edb.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-edb.Tpo $(DEPDIR)/sdb-edb.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='client/edb.cpp' object='sdb-edb.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-edb.o `test -f 'client/edb.cpp' || echo '$(srcdir)/'`client/edb.cpp
+
+sdb-edb.obj: client/edb.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-edb.obj -MD -MP -MF $(DEPDIR)/sdb-edb.Tpo -c -o sdb-edb.obj `if test -f 'client/edb.cpp'; then $(CYGPATH_W) 'client/edb.cpp'; else $(CYGPATH_W) '$(srcdir)/client/edb.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-edb.Tpo $(DEPDIR)/sdb-edb.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='client/edb.cpp' object='sdb-edb.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-edb.obj `if test -f 'client/edb.cpp'; then $(CYGPATH_W) 'client/edb.cpp'; else $(CYGPATH_W) '$(srcdir)/client/edb.cpp'; fi`
+
+sdb-command.o: client/command.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-command.o -MD -MP -MF $(DEPDIR)/sdb-command.Tpo -c -o sdb-command.o `test -f 'client/command.cpp' || echo '$(srcdir)/'`client/command.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-command.Tpo $(DEPDIR)/sdb-command.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='client/command.cpp' object='sdb-command.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-command.o `test -f 'client/command.cpp' || echo '$(srcdir)/'`client/command.cpp
+
+sdb-command.obj: client/command.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-command.obj -MD -MP -MF $(DEPDIR)/sdb-command.Tpo -c -o sdb-command.obj `if test -f 'client/command.cpp'; then $(CYGPATH_W) 'client/command.cpp'; else $(CYGPATH_W) '$(srcdir)/client/command.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-command.Tpo $(DEPDIR)/sdb-command.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='client/command.cpp' object='sdb-command.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-command.obj `if test -f 'client/command.cpp'; then $(CYGPATH_W) 'client/command.cpp'; else $(CYGPATH_W) '$(srcdir)/client/command.cpp'; fi`
+
+sdb-commandFactory.o: client/commandFactory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-commandFactory.o -MD -MP -MF $(DEPDIR)/sdb-commandFactory.Tpo -c -o sdb-commandFactory.o `test -f 'client/commandFactory.cpp' || echo '$(srcdir)/'`client/commandFactory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-commandFactory.Tpo $(DEPDIR)/sdb-commandFactory.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='client/commandFactory.cpp' object='sdb-commandFactory.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-commandFactory.o `test -f 'client/commandFactory.cpp' || echo '$(srcdir)/'`client/commandFactory.cpp
+
+sdb-commandFactory.obj: client/commandFactory.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-commandFactory.obj -MD -MP -MF $(DEPDIR)/sdb-commandFactory.Tpo -c -o sdb-commandFactory.obj `if test -f 'client/commandFactory.cpp'; then $(CYGPATH_W) 'client/commandFactory.cpp'; else $(CYGPATH_W) '$(srcdir)/client/commandFactory.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-commandFactory.Tpo $(DEPDIR)/sdb-commandFactory.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='client/commandFactory.cpp' object='sdb-commandFactory.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-commandFactory.obj `if test -f 'client/commandFactory.cpp'; then $(CYGPATH_W) 'client/commandFactory.cpp'; else $(CYGPATH_W) '$(srcdir)/client/commandFactory.cpp'; fi`
+
+sdb-bsonobj.o: bson/src/bsonobj.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-bsonobj.o -MD -MP -MF $(DEPDIR)/sdb-bsonobj.Tpo -c -o sdb-bsonobj.o `test -f 'bson/src/bsonobj.cpp' || echo '$(srcdir)/'`bson/src/bsonobj.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-bsonobj.Tpo $(DEPDIR)/sdb-bsonobj.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/bsonobj.cpp' object='sdb-bsonobj.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-bsonobj.o `test -f 'bson/src/bsonobj.cpp' || echo '$(srcdir)/'`bson/src/bsonobj.cpp
+
+sdb-bsonobj.obj: bson/src/bsonobj.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-bsonobj.obj -MD -MP -MF $(DEPDIR)/sdb-bsonobj.Tpo -c -o sdb-bsonobj.obj `if test -f 'bson/src/bsonobj.cpp'; then $(CYGPATH_W) 'bson/src/bsonobj.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/bsonobj.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-bsonobj.Tpo $(DEPDIR)/sdb-bsonobj.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/bsonobj.cpp' object='sdb-bsonobj.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-bsonobj.obj `if test -f 'bson/src/bsonobj.cpp'; then $(CYGPATH_W) 'bson/src/bsonobj.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/bsonobj.cpp'; fi`
+
+sdb-json.o: bson/src/util/json.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-json.o -MD -MP -MF $(DEPDIR)/sdb-json.Tpo -c -o sdb-json.o `test -f 'bson/src/util/json.cpp' || echo '$(srcdir)/'`bson/src/util/json.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-json.Tpo $(DEPDIR)/sdb-json.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/util/json.cpp' object='sdb-json.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-json.o `test -f 'bson/src/util/json.cpp' || echo '$(srcdir)/'`bson/src/util/json.cpp
+
+sdb-json.obj: bson/src/util/json.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-json.obj -MD -MP -MF $(DEPDIR)/sdb-json.Tpo -c -o sdb-json.obj `if test -f 'bson/src/util/json.cpp'; then $(CYGPATH_W) 'bson/src/util/json.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/util/json.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-json.Tpo $(DEPDIR)/sdb-json.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/util/json.cpp' object='sdb-json.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-json.obj `if test -f 'bson/src/util/json.cpp'; then $(CYGPATH_W) 'bson/src/util/json.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/util/json.cpp'; fi`
+
+sdb-oid.o: bson/src/oid.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-oid.o -MD -MP -MF $(DEPDIR)/sdb-oid.Tpo -c -o sdb-oid.o `test -f 'bson/src/oid.cpp' || echo '$(srcdir)/'`bson/src/oid.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-oid.Tpo $(DEPDIR)/sdb-oid.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/oid.cpp' object='sdb-oid.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-oid.o `test -f 'bson/src/oid.cpp' || echo '$(srcdir)/'`bson/src/oid.cpp
+
+sdb-oid.obj: bson/src/oid.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-oid.obj -MD -MP -MF $(DEPDIR)/sdb-oid.Tpo -c -o sdb-oid.obj `if test -f 'bson/src/oid.cpp'; then $(CYGPATH_W) 'bson/src/oid.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/oid.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-oid.Tpo $(DEPDIR)/sdb-oid.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/oid.cpp' object='sdb-oid.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-oid.obj `if test -f 'bson/src/oid.cpp'; then $(CYGPATH_W) 'bson/src/oid.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/oid.cpp'; fi`
+
+sdb-base64.o: bson/src/lib/base64.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-base64.o -MD -MP -MF $(DEPDIR)/sdb-base64.Tpo -c -o sdb-base64.o `test -f 'bson/src/lib/base64.cpp' || echo '$(srcdir)/'`bson/src/lib/base64.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-base64.Tpo $(DEPDIR)/sdb-base64.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/lib/base64.cpp' object='sdb-base64.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-base64.o `test -f 'bson/src/lib/base64.cpp' || echo '$(srcdir)/'`bson/src/lib/base64.cpp
+
+sdb-base64.obj: bson/src/lib/base64.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-base64.obj -MD -MP -MF $(DEPDIR)/sdb-base64.Tpo -c -o sdb-base64.obj `if test -f 'bson/src/lib/base64.cpp'; then $(CYGPATH_W) 'bson/src/lib/base64.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/lib/base64.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-base64.Tpo $(DEPDIR)/sdb-base64.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/lib/base64.cpp' object='sdb-base64.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-base64.obj `if test -f 'bson/src/lib/base64.cpp'; then $(CYGPATH_W) 'bson/src/lib/base64.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/lib/base64.cpp'; fi`
+
+sdb-md5.o: bson/src/lib/md5.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-md5.o -MD -MP -MF $(DEPDIR)/sdb-md5.Tpo -c -o sdb-md5.o `test -f 'bson/src/lib/md5.cpp' || echo '$(srcdir)/'`bson/src/lib/md5.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-md5.Tpo $(DEPDIR)/sdb-md5.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/lib/md5.cpp' object='sdb-md5.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-md5.o `test -f 'bson/src/lib/md5.cpp' || echo '$(srcdir)/'`bson/src/lib/md5.cpp
+
+sdb-md5.obj: bson/src/lib/md5.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-md5.obj -MD -MP -MF $(DEPDIR)/sdb-md5.Tpo -c -o sdb-md5.obj `if test -f 'bson/src/lib/md5.cpp'; then $(CYGPATH_W) 'bson/src/lib/md5.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/lib/md5.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-md5.Tpo $(DEPDIR)/sdb-md5.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/lib/md5.cpp' object='sdb-md5.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-md5.obj `if test -f 'bson/src/lib/md5.cpp'; then $(CYGPATH_W) 'bson/src/lib/md5.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/lib/md5.cpp'; fi`
+
+sdb-nonce.o: bson/src/lib/nonce.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-nonce.o -MD -MP -MF $(DEPDIR)/sdb-nonce.Tpo -c -o sdb-nonce.o `test -f 'bson/src/lib/nonce.cpp' || echo '$(srcdir)/'`bson/src/lib/nonce.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-nonce.Tpo $(DEPDIR)/sdb-nonce.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/lib/nonce.cpp' object='sdb-nonce.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-nonce.o `test -f 'bson/src/lib/nonce.cpp' || echo '$(srcdir)/'`bson/src/lib/nonce.cpp
+
+sdb-nonce.obj: bson/src/lib/nonce.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-nonce.obj -MD -MP -MF $(DEPDIR)/sdb-nonce.Tpo -c -o sdb-nonce.obj `if test -f 'bson/src/lib/nonce.cpp'; then $(CYGPATH_W) 'bson/src/lib/nonce.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/lib/nonce.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-nonce.Tpo $(DEPDIR)/sdb-nonce.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='bson/src/lib/nonce.cpp' object='sdb-nonce.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-nonce.obj `if test -f 'bson/src/lib/nonce.cpp'; then $(CYGPATH_W) 'bson/src/lib/nonce.cpp'; else $(CYGPATH_W) '$(srcdir)/bson/src/lib/nonce.cpp'; fi`
+
+sdb-ossSocket.o: oss/ossSocket.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-ossSocket.o -MD -MP -MF $(DEPDIR)/sdb-ossSocket.Tpo -c -o sdb-ossSocket.o `test -f 'oss/ossSocket.cpp' || echo '$(srcdir)/'`oss/ossSocket.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-ossSocket.Tpo $(DEPDIR)/sdb-ossSocket.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='oss/ossSocket.cpp' object='sdb-ossSocket.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-ossSocket.o `test -f 'oss/ossSocket.cpp' || echo '$(srcdir)/'`oss/ossSocket.cpp
+
+sdb-ossSocket.obj: oss/ossSocket.cpp
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -MT sdb-ossSocket.obj -MD -MP -MF $(DEPDIR)/sdb-ossSocket.Tpo -c -o sdb-ossSocket.obj `if test -f 'oss/ossSocket.cpp'; then $(CYGPATH_W) 'oss/ossSocket.cpp'; else $(CYGPATH_W) '$(srcdir)/oss/ossSocket.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/sdb-ossSocket.Tpo $(DEPDIR)/sdb-ossSocket.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	$(AM_V_CXX)source='oss/ossSocket.cpp' object='sdb-ossSocket.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(AM_V_CXX@am__nodep@)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(sdb_CXXFLAGS) $(CXXFLAGS) -c -o sdb-ossSocket.obj `if test -f 'oss/ossSocket.cpp'; then $(CYGPATH_W) 'oss/ossSocket.cpp'; else $(CYGPATH_W) '$(srcdir)/oss/ossSocket.cpp'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -813,7 +1024,19 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/sapphiredb-md5.Po
 	-rm -f ./$(DEPDIR)/sapphiredb-nonce.Po
 	-rm -f ./$(DEPDIR)/sapphiredb-oid.Po
+	-rm -f ./$(DEPDIR)/sapphiredb-ossSocket.Po
 	-rm -f ./$(DEPDIR)/sapphiredb-pmdMain.Po
+	-rm -f ./$(DEPDIR)/sapphiredb-pmdTcpListener.Po
+	-rm -f ./$(DEPDIR)/sdb-base64.Po
+	-rm -f ./$(DEPDIR)/sdb-bsonobj.Po
+	-rm -f ./$(DEPDIR)/sdb-command.Po
+	-rm -f ./$(DEPDIR)/sdb-commandFactory.Po
+	-rm -f ./$(DEPDIR)/sdb-edb.Po
+	-rm -f ./$(DEPDIR)/sdb-json.Po
+	-rm -f ./$(DEPDIR)/sdb-md5.Po
+	-rm -f ./$(DEPDIR)/sdb-nonce.Po
+	-rm -f ./$(DEPDIR)/sdb-oid.Po
+	-rm -f ./$(DEPDIR)/sdb-ossSocket.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-hdr distclean-tags
@@ -867,7 +1090,19 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/sapphiredb-md5.Po
 	-rm -f ./$(DEPDIR)/sapphiredb-nonce.Po
 	-rm -f ./$(DEPDIR)/sapphiredb-oid.Po
+	-rm -f ./$(DEPDIR)/sapphiredb-ossSocket.Po
 	-rm -f ./$(DEPDIR)/sapphiredb-pmdMain.Po
+	-rm -f ./$(DEPDIR)/sapphiredb-pmdTcpListener.Po
+	-rm -f ./$(DEPDIR)/sdb-base64.Po
+	-rm -f ./$(DEPDIR)/sdb-bsonobj.Po
+	-rm -f ./$(DEPDIR)/sdb-command.Po
+	-rm -f ./$(DEPDIR)/sdb-commandFactory.Po
+	-rm -f ./$(DEPDIR)/sdb-edb.Po
+	-rm -f ./$(DEPDIR)/sdb-json.Po
+	-rm -f ./$(DEPDIR)/sdb-md5.Po
+	-rm -f ./$(DEPDIR)/sdb-nonce.Po
+	-rm -f ./$(DEPDIR)/sdb-oid.Po
+	-rm -f ./$(DEPDIR)/sdb-ossSocket.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

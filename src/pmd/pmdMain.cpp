@@ -1,6 +1,9 @@
-#include<iostream>
+#include "core.hpp"
+
+int pmdTcpListenerEntryPoint();
+
 int main(int argc, char ** argv){
-	std::cout<<"hello ,world\n"<<std::endl;
+	pmdTcpListenerEntryPoint();
 	return 0;
 }
 
