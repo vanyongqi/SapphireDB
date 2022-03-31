@@ -24,3 +24,4 @@ automake-add-missing
 
 make
 
+#1 的标记 是第一次编译 需要手动设置相关变量
