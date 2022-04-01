@@ -1,6 +1,11 @@
 #ifndef CORE_HPP_
 #define CORE_HPP_
+/*******************************************************************************
 
+core.hpp
+we design errno code which probabl happened when execute code in this headerfile.
+
+*******************************************************************************/
 #include<unistd.h>
 #include<stdio.h>
 #include<stdlib.h>
@@ -21,6 +26,7 @@
 #include<netinet/tcp.h>
 #include<sys/mman.h>
 #include<arpa/inet.h>//inet_addr() 
+
 #include<string>
 #include<map>
 #include<set>
