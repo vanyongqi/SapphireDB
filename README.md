@@ -1,4 +1,24 @@
 # **Spphire：A Simple NoSQL.**
+## **codeing log ：**
+- 2022/04/01:  
+      - server与client的通信            ✅   
+      - 编写README.md ✅
+
+- 2022/03/31:  
+      - 完成client发送sql的基本语句       ✅  
+      - socket_demo测试                ✅
+
+- 2022/03/21:  
+      - socket类的设计封装                   ✅   
+      - VIM&nbsp;&nbsp;➡️ &nbsp;&nbsp;VScode
+- 2022/03/11:  
+      - upload test project to Github ✅  
+      - Windows-Linux虚拟机&nbsp;&nbsp; ➡️ &nbsp;&nbsp;Mac-Linux虚拟机开发  
+      -XShell&nbsp;&nbsp; ➡️&nbsp;&nbsp; Royal TSX
+- 2022/03/01:  
+      - boost库等编译环境的配置✅  
+      -  autotools编译测试✅
+------------------------
 ### **数据库提供的功能：**
 
 - 高可靠：提供可靠的数据服务
@@ -48,6 +68,15 @@
 - OSS:operating system service 底层服务
 - MON:monitor 监控
 - PD:prblem detection 问题诊断
+
+**编译环境：**
+
+- 编译语言：C/C++
+- MAKE工具：autotools 
+- 第三方库：Boost 1_78_0、JSON、BSON
+- 操作系统：Ubuntu 20.04 LTS 
+- 客户端驱动支持：JDK8
+- 开发调试工具：g++9.4.0、gdb 9.2
 
 **Paper List:**
 - [1] Codd, E. F. . (2001). A relational model of data for large shared data banks. Springer Berlin Heidelberg.
