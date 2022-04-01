@@ -1,21 +1,24 @@
 #ifndef OSSSOCKET_HPP_
 #define OSSSOCKET_HPP_
+/*******************************************************************************
 
+ossSocket.hpp
+envelop the socket by implement a ossSocket class.
+
+*******************************************************************************/
 #include"core.hpp"
 #define SOCKET_GETLASTERROR errno
-//default timeout :10 ms
-#define OSS_SOCKET_DFT_TIMEOUT 10000
-
+#define OSS_SOCKET_DFT_TIMEOUT 10000 //default timeout :10 ms
 #define OSS_MAX_HOSTNAME NI_MAXHOST
 #define OSS_MAX_SERVICENAME NI_MAXSERV
 
 class _ossSocket{
 private:
-    int _fd;
-    socklen_t _addressLen;
-    socklen_t _peerAddressLen;
-    struct sockaddr_in _sockAddress;
-    struct sockaddr_in _peerAddress;
+    int _fd;//file description
+    socklen_t _addressLen;// server len
+    socklen_t _peerAddressLen;// client len
+    struct sockaddr_in _sockAddress;//server sockaddr
+    struct sockaddr_in _peerAddress;//client sockaddr
     bool _init;
     int _timeout;
 protected:
