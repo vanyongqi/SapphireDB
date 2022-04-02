@@ -1,16 +1,7 @@
 /*******************************************************************************
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License, version 3,
-   as published by the Free Software Foundation.
-
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU Affero General Public License for more details.
-
-   You should have received a copy of the GNU Affero General Public License
-   along with this program. If not, see <http://www.gnu.org/license/>.
+ossSocket.cpp
+implement socket class
 *******************************************************************************/
 #include <stdio.h>
 #include "ossSocket.hpp"
@@ -21,17 +12,20 @@ _ossSocket::_ossSocket ( unsigned int port, int timeout )
    _init = false ;
    _fd = 0 ;
    _timeout = timeout ;
+
    memset ( &_sockAddress, 0, sizeof(sockaddr_in) ) ;
    memset ( &_peerAddress, 0, sizeof(sockaddr_in) ) ;
+
    _peerAddressLen = sizeof (_peerAddress) ;
+   _addressLen = sizeof ( _sockAddress ) ;
 
    _sockAddress.sin_family = AF_INET ;
    _sockAddress.sin_addr.s_addr = htonl ( INADDR_ANY ) ;
    _sockAddress.sin_port = htons ( port ) ;
-   _addressLen = sizeof ( _sockAddress ) ;
+
 }
 
-//  a socket
+//  a default socket
 _ossSocket::_ossSocket()
 {
    _init = false;
@@ -42,7 +36,7 @@ _ossSocket::_ossSocket()
    _peerAddressLen = sizeof(_peerAddress);
 }
 
-//  a connecting socket
+//  a  socket
 _ossSocket::_ossSocket ( const char *pHostname, unsigned int port, int timeout )
 {
    struct hostent *hp ;
@@ -61,6 +55,7 @@ _ossSocket::_ossSocket ( const char *pHostname, unsigned int port, int timeout )
    _sockAddress.sin_port = htons ( port ) ;
    _addressLen = sizeof ( _sockAddress ) ;
 }
+
 // Create from a existing socket
 _ossSocket::_ossSocket ( int *sock, int timeout )
 {
@@ -118,7 +113,7 @@ done :
 error:
    goto done ;
 }
-
+// linger
 int ossSocket::setSocketLi ( int lOnOff, int linger )
 {
    int rc = EDB_OK ;
@@ -648,6 +643,7 @@ int ossSocket::getPeerAddress ( char * pAddress, unsigned int length )
    return _getAddress ( &_peerAddress, pAddress, length ) ;
 }
 
+//set timeout seconds size
 int ossSocket::setTimeout ( int seconds )
 {
    int rc = EDB_OK ;
