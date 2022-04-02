@@ -36,7 +36,7 @@ _ossSocket::_ossSocket()
    _peerAddressLen = sizeof(_peerAddress);
 }
 
-//  a  socket
+//  an  official socket
 _ossSocket::_ossSocket ( const char *pHostname, unsigned int port, int timeout )
 {
    struct hostent *hp ;
@@ -46,14 +46,15 @@ _ossSocket::_ossSocket ( const char *pHostname, unsigned int port, int timeout )
    memset ( &_sockAddress, 0, sizeof(sockaddr_in) ) ;
    memset ( &_peerAddress, 0, sizeof(sockaddr_in) ) ;
    _peerAddressLen = sizeof (_peerAddress) ;
+   _addressLen = sizeof ( _sockAddress ) ;
 
    _sockAddress.sin_family = AF_INET ;
-   if ( (hp = gethostbyname ( pHostname )))
+   if ( (hp = gethostbyname ( pHostname )))// return a hostent type
       _sockAddress.sin_addr.s_addr = *((int *)hp->h_addr_list[0] ) ;
    else
-      _sockAddress.sin_addr.s_addr = inet_addr ( pHostname ) ;
+      _sockAddress.sin_addr.s_addr = inet_addr ( pHostname ) ;//将一个点分十进制的IP转换成一个长整型数（u_long类型）
    _sockAddress.sin_port = htons ( port ) ;
-   _addressLen = sizeof ( _sockAddress ) ;
+
 }
 
 // Create from a existing socket
@@ -71,7 +72,7 @@ _ossSocket::_ossSocket ( int *sock, int timeout )
    rc = getsockname ( _fd, (sockaddr*)&_sockAddress, &_addressLen ) ;
    if ( rc )
    {
-      printf ( "Failed to get sock name, error = %d",
+      printf ( "Failed to get sock name, error = %d\n",
               SOCKET_GETLASTERROR ) ;
       _init = false ;
    }
@@ -81,7 +82,7 @@ _ossSocket::_ossSocket ( int *sock, int timeout )
       rc = getpeername ( _fd, (sockaddr*)&_peerAddress, &_peerAddressLen ) ;
       if ( rc )
       {
-         printf ( "Failed to get peer name, error = %d",
+         printf ( "Failed to get peer name, error = %d\n",
                  SOCKET_GETLASTERROR ) ;
       }
    }
@@ -97,7 +98,7 @@ int ossSocket::initSocket ()
    memset ( &_peerAddress, 0, sizeof(sockaddr_in) ) ;
    _peerAddressLen = sizeof ( _peerAddress ) ;
 
-   _fd = socket ( AF_INET, SOCK_STREAM, IPPROTO_TCP ) ;
+   _fd = socket ( AF_INET, SOCK_STREAM, IPPROTO_TCP ) ;//socket<domain,type,protocol>
    if ( -1 == _fd )
    {
       printf ( "Failed to initialize socket, error = %d",
@@ -114,6 +115,28 @@ error:
    goto done ;
 }
 // linger
+/*
+1、设置 l_onoff为0，则该选项关闭，l_linger的值被忽略，等于内核缺省情况，
+close调用会立即返回给调用者，
+如果可能将会传输任何未发送的数据；
+
+2、设置 l_onoff为非0，l_linger为0，
+则套接口关闭时TCP夭折连接，
+TCP将丢弃保留在套接口发送缓冲区中的任何数据并发送一个RST给对方，
+而不是通常的四分组终止序列，这避免了TIME_WAIT状态；
+
+3、设置 l_onoff 为非0，l_linger为非0，
+当套接口关闭时内核将拖延一段时间（由l_linger决定）。
+如果套接口缓冲区中仍残留数据，
+进程将处于睡眠状态，直 到（a）所有数据发送完且被对方确认，
+之后进行正常的终止序列（描述字访问计数为0）或（b）延迟时间到。
+此种情况下，应用程序检查close的返回值是非常重要的，
+如果在数据发送完并被确认前时间到，
+close将返回EWOULDBLOCK错误且套接口发送缓冲区中的任何数据都丢失。
+close的成功返回仅告诉我们发送的数据（和FIN）已由对方TCP确认
+它并不能告诉我们对方应用进程是否已读了数据。
+如果套接口设为非阻塞的，它将不等待close完成.
+*/
 int ossSocket::setSocketLi ( int lOnOff, int linger )
 {
    int rc = EDB_OK ;
@@ -144,38 +167,34 @@ void ossSocket::setAddress(const char* pHostname, unsigned int port )
 
 }
 
-int ossSocket::bind_listen ()
-{
+int ossSocket::bind_listen (){
    int rc = EDB_OK ;
    int temp = 1 ;
-   // Allows the socket to be bound to an address that is already in use.
+   // Allows the socket to be bind to an address that is already in use.
    // For database shutdown and restart right away, before socket close
    rc = setsockopt ( _fd, SOL_SOCKET,
                      SO_REUSEADDR,
                      (char*)&temp,
                      sizeof (int) );
-   if ( rc )
-   {
+   if ( rc ){
       printf ( "Failed to setsockopt SO_REUSEADDR, rc = %d",
               SOCKET_GETLASTERROR ) ;
    }
    rc = setSocketLi( 1, 30 ) ;
-   if ( rc )
-   {
+   if ( rc ){
       printf ( "Failed to setsockopt SO_LINGER, rc = %d",
               SOCKET_GETLASTERROR ) ;
    }
+   //::bind()函数不属于任何类,通常是一个全局函数
    rc = ::bind ( _fd, (struct sockaddr *)&_sockAddress, _addressLen ) ;
-   if ( rc )
-   {
+   if ( rc ){
       printf ( "Failed to bind socket, rc = %d", SOCKET_GETLASTERROR ) ;
       rc = EDB_NETWORK ;
       goto error ;
    }
 
    rc = listen ( _fd, SOMAXCONN ) ;
-   if ( rc )
-   {
+   if ( rc ){
       printf ( "Failed to listen socket, rc = %d", SOCKET_GETLASTERROR ) ;
       rc = EDB_NETWORK ;
       goto error ;
@@ -230,8 +249,7 @@ int ossSocket::send ( const char *pMsg, int len,
       }
 
       // if the socket we interested is not receiving anything, let's continue
-      if ( FD_ISSET ( _fd, &fds ) )
-      {
+      if ( FD_ISSET ( _fd, &fds ) ){
          break ;
       }
    }
@@ -473,6 +491,7 @@ done :
 error :
    goto done ;
 }
+
 int ossSocket::connect ()
 {
    int rc = EDB_OK ;
@@ -578,7 +597,7 @@ error :
    close () ;
    goto done ;
 }
-
+// nagle() have message delay 
 int ossSocket::disableNagle ()
 {
    int rc = EDB_OK ;
@@ -623,6 +642,7 @@ done :
 error :
    goto done ;
 }
+
 unsigned int ossSocket::getLocalPort ()
 {
    return _getPort ( &_sockAddress ) ;
