@@ -27,7 +27,8 @@ protected:
 public:
     int setSocketLi(int lOnOff, int linger);
     void setAddress(const char* pHostName, unsigned int port);
-    _ossSocket();
+    //socket<ip,port> -->socket<ip,port,timeout>
+    _ossSocket();//
     _ossSocket(unsigned int port, int timeout = 0);
     _ossSocket(const char* pHostName,unsigned int port,int timeout =0);
     _ossSocket(int *sock ,int timeout =0);
