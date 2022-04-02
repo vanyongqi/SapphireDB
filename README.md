@@ -1,8 +1,8 @@
 # **Spphire：A Simple NoSQL.**
 ## **codeing log ：**
 - 2022/04/02:
-      - 增加 src/include /src/oss /src/client下的注释
-      - 利用PlantUML绘制ossSocket类的class diagram
+      - 增加 src/include /src/oss /src/client下的注释✅
+      - 利用PlantUML绘制ossSocket类的class diagram✅
 - 2022/04/01:  
       - server与client的通信            ✅   
       - 编写README.md ✅
