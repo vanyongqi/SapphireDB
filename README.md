@@ -1,5 +1,7 @@
 # **Spphire：A Simple NoSQL.**
-## **codeing log ：**
+## **coding log ：**
+- 2022/04/15:
+      - 增加对mutex的类封装✅
 - 2022/04/02:
       - 增加 src/include /src/oss /src/client下的注释✅
       - 利用PlantUML绘制ossSocket类的class diagram✅
