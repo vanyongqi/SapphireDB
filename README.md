@@ -1,9 +1,12 @@
 # **Spphire：A Simple NoSQL.**
 ## **coding log ：**
+- 2022/04/18:
+      -PD问题诊断模块（日志）的编写、编译。✅
+
 - 2022/04/15:
       - 增加对mutex的类封装✅
 - 2022/04/02:
-      - 增加 src/include /src/oss /src/client下的注释✅
+      - 增加 src/include /src/oss /src/client下的注释✅  
       - 利用PlantUML绘制ossSocket类的class diagram✅
 - 2022/04/01:  
       - server与client的通信            ✅   
