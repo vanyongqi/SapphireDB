@@ -3,10 +3,10 @@
 
 #define PMD_TCPLISTENER_RETRY 5
 #define OSS_MAX_SERVICENAME NI_MAXSERV
-
+#define PORT 48127
 int pmdTcpListenerEntryPoint(){
     int rc = EDB_OK;
-    int port = 48127;
+    int port = PORT;
     ossSocket sock(port);
     rc = sock.initSocket();
     if(rc){
